@@ -177,14 +177,19 @@ export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
   const [lang, setLang] = useState<Language>("en");
   const [currentJoke, setCurrentJoke] = useState<Joke | null>(null);
+  const [viewedIds, setViewedIds] = useState<(string | number)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const [giggleTrigger, setGiggleTrigger] = useState(0);
   const [showExplainer, setShowExplainer] = useState(false);
   
-  const viewedIdsRef = useRef<Set<string>>(new Set());
+  const viewedIdsRef = useRef<(string | number)[]>([]);
   const jokeCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    viewedIdsRef.current = viewedIds;
+  }, [viewedIds]);
 
   const triggerToast = (msg: string) => {
     setToastMsg(msg);
@@ -196,15 +201,15 @@ export default function Home() {
     setHasError(false);
     setShowExplainer(false);
     try {
-      const joke = await fetchJoke(targetLang, viewedIdsRef.current);
-      
-      const ids = viewedIdsRef.current;
-      ids.add(joke.id);
-      if (ids.size > MAX_HISTORY) {
-        const first = ids.values().next().value;
-        if (first !== undefined) ids.delete(first);
+      const joke = await fetchJoke(targetLang, new Set(viewedIdsRef.current));
+
+      const nextViewedIds = [...viewedIdsRef.current.filter((id) => id !== joke.id), joke.id];
+      if (nextViewedIds.length > MAX_HISTORY) {
+        nextViewedIds.shift();
       }
-      
+
+      viewedIdsRef.current = nextViewedIds;
+      setViewedIds(nextViewedIds);
       setCurrentJoke(joke);
       // Trigger giggle animation
       setGiggleTrigger(prev => prev + 1);

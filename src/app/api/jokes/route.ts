@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   // could handle the recursive retry. Or the frontend passes the history string.
   // Let's allow frontend to pass a comma-separated list of viewed IDs.
   const viewedIdsString = searchParams.get("viewedIds");
-  let viewedIds = new Set<string>();
+  const viewedIds = new Set<string>();
   if (viewedIdsString) {
     viewedIdsString.split(",").forEach(id => viewedIds.add(id));
   }
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   // Try to find a non-viewed joke (up to 5 retries to avoid infinite loops)
   for (let attempt = 0; attempt < 5; attempt++) {
     const joke = pool[Math.floor(Math.random() * pool.length)];
-    if (!viewedIds.has(joke.id)) {
+    if (!viewedIds.has(String(joke.id))) {
       return NextResponse.json(joke);
     }
   }

@@ -1,7 +1,7 @@
 export type Language = 'en' | 'hi' | 'mr' | 'ta' | 'te' | 'ml';
 
 export interface Joke {
-  id: string;
+  id: string | number;
   text: string;
 }
 

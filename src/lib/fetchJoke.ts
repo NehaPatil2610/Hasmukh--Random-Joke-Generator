@@ -1,4 +1,4 @@
-import { type Language, type Joke, jokesData } from "@/data/jokes";
+import { type Language, type Joke } from "@/data/jokes";
 
 const ENGLISH_API = "https://v2.jokeapi.dev/joke/Any?type=single&safe-mode";
 
@@ -13,12 +13,12 @@ const ENGLISH_API = "https://v2.jokeapi.dev/joke/Any?type=single&safe-mode";
  */
 export async function fetchJoke(
   lang: Language,
-  viewedIds: Set<number | string>,
+  viewedIds: Set<string | number>,
   attempt = 0
 ): Promise<Joke> {
   // Hard limit on recursion
   if (attempt >= 5) {
-    return { id: "-1", text: "No fresh jokes found. Please try another language!" };
+    return { id: "error", text: "No fresh jokes found. Please try another language!" };
   }
 
   let joke: Joke | null = null;
@@ -32,24 +32,24 @@ export async function fetchJoke(
       }
     } catch {
       // Network error, handle locally for now
-      joke = { id: `en-fallback`, text: "Why couldn't the API cross the road? Because it had a connection error." };
+      joke = { id: "en-fallback", text: "Why couldn't the API cross the road? Because it had a connection error." };
     }
   } else {
     try {
       // Use internal API route for regional languages
-      const viewedIdsParam = Array.from(viewedIds).join(',');
+      const viewedIdsParam = Array.from(viewedIds).join(",");
       const res = await fetch(`/api/jokes?lang=${lang}&viewedIds=${viewedIdsParam}`);
       if (res.ok) {
         joke = await res.json();
       }
     } catch {
       // Internal error fallback
-      joke = { id: `region-fallback`, text: "ഒരു എറർ സംഭവിച്ചു. (An error occurred.)" };
+      joke = { id: "region-fallback", text: "An error occurred. Please try again." };
     }
   }
 
   if (!joke) {
-    return { id: "-1", text: "Wait, the joke vanished into the void... Try again!" };
+    return { id: "error", text: "Wait, the joke vanished into the void... Try again!" };
   }
 
   // The "No-Repeat" Engine
